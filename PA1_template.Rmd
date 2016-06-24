@@ -1,25 +1,135 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+## Reproducible Research: Project Assignment 1  
+
+## Maham Niaz  
+
+### Introduction  
+This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals throughout the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
+
+This document presents the results from Project Assignment 1 in the Coursera course Reproducible Research, written in a single R markdown document that can be processed by knitr and transformed into an HTML file.
+
+### Important Libraries
+```{r}
+library(lattice)
+```
+
+### Loading and preprocessing the data
+Loading/ Reading the data:  
+```{r}
+if(!file.exists("activity.csv"))
+{
+    unzip("activity.zip")
+}
+
+data <- read.csv("activity.csv", stringsAsFactors = FALSE)
+str(data)
+```
+Processing the data:
+```{r}
+data$date <- as.Date(data$date)
+data$interval<- as.factor(data$interval)
+str(data)
+```
+
+### What is mean total number of steps taken per day?
+Total number of steps taken per day:  
+```{r}
+stepsperday <- tapply(data$steps,data$date, FUN = sum)
+head(stepsperday)
+```
+Histogram of total steps per day:  
+```{r}
+barplot(stepsperday, xlab = "date", ylab = "Total Steps", main = "Steps per Day")
+```  
+
+Mean per day:  
+```{r}
+mean(stepsperday, na.rm = TRUE)
+```  
+
+Median per Day:  
+```{r}
+median(stepsperday, na.rm = TRUE)
+```  
+
+### What is the average daily activity pattern?
+Average steps per interval:  
+```{r}
+stepsperinterval <- tapply(data$steps, data$interval, FUN = mean, na.rm = TRUE)
+plot(levels(data$interval),stepsperinterval, type = "l", col="blue", xlab = "5-Minute Interval", ylab = "Average Number of steps" )
+```  
+
+5-Minute interval with maximum steps:
+```{r}
+max <- which.max(stepsperinterval)
+stepsperinterval[max]
+```  
+
+### Imputing missing values
+Total Number of Missing Values:  
+```{r}
+sum(is.na.data.frame(data))
+```
+
+New dataset with missing values filled in:  
+```{r}
+new_data <- data
+new_data[which(is.na(new_data$steps)),1]<- stepsperinterval[new_data[which(is.na(new_data$steps)),3]]
+```  
+
+Creating a histogram of the new Dataset:    
+```{r}
+new_stepsperday <- tapply(new_data$steps,new_data$date, FUN = sum)
+barplot(new_stepsperday, xlab = "date", ylab = "Total Steps", main = "Steps per Day")
+```  
+
+Caculating new mean    
+```{r}
+mean(new_stepsperday)
+```  
+
+Caculating new median  
+```{r}
+median(new_stepsperday)
+```
+Caculating mean differnece from the un-inputed dataset:    
+ 
+```{r}
+mean(new_stepsperday)-mean(stepsperday, na.rm = TRUE)
+```
+Caculating median differnece from the un-inputed dataset:    
+ 
+```{r}
+median(new_stepsperday)-median(stepsperday, na.rm = TRUE)
+```
+
+The median number of steps has changed.  
 
 
-## Loading and preprocessing the data
+
+### Are there differences in activity patterns between weekdays and weekends?
+New Factor Variable: Day  
+ 
+```{r}
+new_data$day <- weekdays(new_data$date)
+new_data$day <- gsub("Monday", "Weekday", new_data$day)
+new_data$day <- gsub("Tuesday", "Weekday", new_data$day)
+new_data$day <- gsub("Wednesday", "Weekday", new_data$day)
+new_data$day <- gsub("Thursday", "Weekday", new_data$day)
+new_data$day <- gsub("Friday", "Weekday", new_data$day)
+new_data$day <- gsub("Saturday", "Weekend", new_data$day)
+new_data$day <- gsub("Sunday", "Weekend", new_data$day)
+
+new_data$day <- as.factor(new_data$day)
+```
+
+Activity plot for Weekdays:
+```{r}
+steps.interval <- aggregate(steps ~ interval + day, new_data, mean)
+xyplot(steps ~ interval | day, data=steps.interval, layout=c(1,2), type='l')
+```   
 
 
 
-## What is mean total number of steps taken per day?
 
 
 
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
